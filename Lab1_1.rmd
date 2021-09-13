@@ -1,0 +1,205 @@
+---
+title: 'Laboratorio 1.1: Exploración y Visualización de Datos'
+date: "Septiembre 2021"
+author: 'José Luis Cádiz, Maximiliano Jorquera Jimenez'
+output:
+  html_document:
+    theme: default
+    toc: no
+  pdf_document:
+    toc: no
+---
+
+
+# Declaración de compromiso ético
+Nosotros **José Luis Cádiz, Maximiliano Jorquera Jimenez**, declaramos que realizamos de manera grupal los pasos de la presente actividad. También declaramos no incurrir en copia, ni compartir nuestras respuestas con otras personas ni con otros grupos. Por lo que, ratificamos que las respuestas son de nuestra propia confección y reflejan nuestro propio conocimiento.
+
+
+# Instrucciones
+
+1. Trabajen en equipos de dos personas. Salvo excepciones, no se corregirá entregas con menos de dos integrantes.
+
+2. Modifique este archivo `.Rmd` agregando sus respuestas donde corresponda.
+
+3. Para cada pregunta, cuando corresponda, **incluya el código fuente que utilizó para llegar a su respuesta**.
+
+4. El formato de entrega para esta actividad es un archivo html. **Genere un archivo HTML usando RStudio** y súbalo a U-Cursos.
+  
+Basta con que uno de los integrantes haga la entrega. Si ambos hacen una entrega en U-Cursos, se revisará cualquiera de éstas.
+
+# Laboratorio 
+La primera parte de esta actividad son preguntas teóricas que avanzaron en las clases del curso de Minería de datos.
+
+## Teoría
+
+*1. ¿Cuál es el objetivo de Minería de datos y qué la diferencia de Machine Learning? De un ejemplo para explicar la diferencia.*
+
+**Respuesta: El objetivo de la minería de datos es descubrir automáticamente información útil en grandes repositorios de datos, la diferencia con el ML es que la minería de datos genera entendimiento y el ML genera predicciones, es decir, con la minería de datos entendemos qué factores o variables hacen que ocurra un suceso o logramos explicarlo y con el ML podríamos anticiparnos y predecir qué es lo que va a pasar según los datos que se tengan. Por ejemplo, dada una base de datos de un banco, clustering nos permitiría generar agrupaciones de comportamientos similares de los clientes, pudiendo sacar provecho de esto ofreciendo productos que sean acorde al comportamiento particular de cada grupo. Por otro lado, clasificación, puede ser usado para clasificar si un cliente es apto o no para otorgarle un crédito de consumo, siempre y cuando exista un conjunto de datos históricos de clientes que pagan y no pagan, por lo que se podría predecir el comportamiento del cliente según su data histórica.**
+
+*2. Describa y compare los siguientes métodos usados en Minería de datos: clasificación vs. clustering.*
+
+**Respuesta: Clasificación son algoritmos de machine learning de aprendizaje supervisado, el cual consiste en entrenar los parámetros del clasificador estadístico a partir de un conjunto de entrenamiento, con el objetivo de que poder clasificar con el mejor rendimiento posible las clases (etiquetas) sobre el conjunto de prueba.** 
+
+
+**Por otro lado, clustering son algoritmos no supervisados, ya que no hay un conocimiento previo sobre los datos y no hay necesidad de etiquetas. El objetivo del clustering es generar grupos que posean características similares.**
+
+**La principal diferencia entre clasificación y clustering es que el primero usa etiquetas y existe un conocimiento previo debido a que los datos poseen etiquetas y el segundo no usa, no existe conocimiento previo y en general se usa para mejorar el entendimiento de los datos y también puede ser útil para generar etiquetas para una posterior etapa de clasificación.**
+
+*3. ¿Qué es el análisis exploratorio de datos o EDA?*
+
+**Respuesta: EDA consiste en el análisis estadístico de un conjunto de datos con el objetivo de mejorar el entendimiento del comportamiento de estos mediante métricas que resuman su comportamiento, ya sean medidas de tendencia central como promedios, percentiles o medidas de dispersión como la varianza. Otra opción es generar visualizaciones tales como gráficos de dispersión, histogramas o matrices de correlación.**
+
+*4. Explique cómo se identifican los valores atípicos u outliers en un boxplot.*
+
+**Respuesta: Los boxplots son de gran ayuda para identificar la presencia de este tipo de valores, como se contruye un rectángulo entre el primer y tercer cuartil (Q1 y Q3), de altura RIC (Q3 - Q1), se tiene un área delimitada en donde se concentran la gran mayoría de los datos, además de este rectángluo, cada extremo de este se extiende con una recta de largo Q1 - 1,5xRIC (recta inferior) y Q3 + 1,5xRIC (recta superior), por lo que cualquier dato que esté fuera de esta zona se considera outlier o atípico, ya que es un dato demasiado extremo para la mayoría de los datos, por lo que probablemente ensucie la muestra o sea un dato que haya que prestarle más atención porque puede que nos esté diciendo algo. Estos criterios se obtienen del comportamiento de una distrubución normal, en donde los outliers están más allá de |2,698| veces la desviación estándar.**
+
+## Práctica
+En esta parte de la actividad se trabajará con los datos del Proceso Constituyente 2016-2017 publicados en el Portal de Datos Abiertos del Gobierno de Chile, para mayor información pueden ingresar al siguiente link: https://datos.gob.cl/dataset/proceso-constituyente-abierto-a-la-ciudadania. Los datos corresponden a las actas de los Encuentros Locales Autoconvocados (ELAs), en cada cual, un grupo de personas se reune a discutir distintos conceptos como por ejemplo: salud, educación, seguridad, etc.
+
+Los datos con los que trabajarán consisten en la cantidad de veces que cada concepto constitucional fue mencionado por cada localidad de Chile. 
+
+Para cargar los datos, use:
+
+```{r}
+data_tf <- read.csv("http://dcc.uchile.cl/~hsarmien/mineria/datasets/actas.txt", header = T)
+```
+
+**Por cada pregunta adjunte el código R que utilizó para llegar a la respuesta. Respuestas sin código no recibirán puntaje**
+
+### Exploración básica
+
+1. ¿Cuáles son las dimensiones del dataset (filas, columnas)? Adjunte código o indique cómo determinó la cantidad de datos total. 
+
+```{r}
+# RESPUESTA
+dim(data_tf)
+#Las filas son 328 y las columnas son 113
+```
+
+2. ¿Qué describe cada línea del dataset? (ejemplifique tomando la fila 45)
+
+```{r}
+# RESPUESTA
+data_tf[45,]
+# cada fila representa una acta de cada localidad de chile en donde se muestra la cantidad de veces que cada concepto constitucional fue mencionado.
+```
+
+3. ¿Existen localidades repetidas en el dataset? Adjunte el código o indique cómo llegó a esa conclusión. 
+
+```{r}
+# RESPUESTA
+length(unique(data_tf$localidad))
+# La cantidad de localidades distintas es la misma que la cantidad de filas que tiene el data set, por lo que no existen localidades repetidas.
+```
+
+
+### Análisis
+
+1. Liste todas las localidades donde *no* se discutió el concepto `justicia`. 
+
+```{r}
+# RESPUESTA
+data_tf[data_tf$justicia ==0,]$localidad
+```
+
+2. Liste las 10 localidades que más mencionaron el concepto `al_trabajo`. 
+
+```{r}
+# RESPUESTA
+data_tf[order(data_tf$al_trabajo, decreasing = TRUE), ]$localidad[1:10]
+
+```
+
+
+3. Liste los 10 conceptos más mencionados a lo largo de todo el proceso.
+
+```{r}
+# RESPUESTA
+sort(colSums(data_tf[2:113]),decreasing = T)[1:10]
+```
+
+
+4. Liste las 10 localidades que más participaron en el proceso. Describa cómo definió su medida de participación.
+
+
+```{r}
+# RESPUESTA
+# La métrica se definio a partir de la cantidad total de palabras mencionadas en el acta para cada locacilidad.
+participacion<-rowSums(data_tf[2:113])
+data_parti<-cbind(data_tf,participacion)
+data_parti[order(data_parti$participacion, decreasing = TRUE), ]$localidad[1:10]
+
+```
+
+
+5. Ejecute el siguiente código que permitirá agregar una nueva columna a nuestro dataframe que solo tendrá el nombre de la región.
+
+```{r, message = F, warning=F}
+library(dplyr)
+library(ggplot2)
+regiones <- strsplit(as.character(data_tf[,1]), '/')
+data_tf$region <- sapply(regiones, "[[", 1)
+data_tf <- data_tf %>% select(localidad, region, everything())
+```
+
+Luego, genere un gráfico de barras (ggplot) que muestre los 10 conceptos más mencionados en cada una de las regiones mencionadas (adjunte gráficos y código):
+
+- `Coquimbo`
+- `Antofagasta`
+- `Metropolitana de Santiago`
+
+
+Cabe resaltar, que se esperan tres gráficos de barras para las tres diferentes regiones:
+
+
+```{r}
+# 10 conceptos más mencionados en Coquimbo
+data_coquimbo <- data_tf[data_tf$region =='Coquimbo',]
+mencionadoscoquimbo<-colSums(data_coquimbo[3:114])
+vectorcoquimbo <- unlist(mencionadoscoquimbo)
+Frecuenciaq <- sort(vectorcoquimbo,decreasing = T)[1:10]
+coquimbo <- data.frame(Frecuenciaq)
+Palabrasq <- names(Frecuenciaq)
+coquimbo<-cbind(coquimbo,Palabrasq)
+ggplot(coquimbo) +   # asociamos un data frame a ggplot
+  geom_bar(aes(x = reorder(Palabrasq, Frecuenciaq), y = Frecuenciaq), stat="identity") +   # creamos un grafico de barras como una capa
+  coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Top conceptos Coquimbo") + # título
+  xlab("Concepto") + ylab("Frecuencia (cantidad)") 
+```
+
+```{r}
+# 10 conceptos más mencionados en Antofagasta
+data_antofa <- data_tf[data_tf$region =='Antofagasta',]
+mencionadosantofa<-colSums(data_antofa[3:114])
+vectorantofa <- unlist(mencionadosantofa)
+Frecuenciaa <- sort(vectorantofa,decreasing = T)[1:10]
+antofa <- data.frame(Frecuenciaa)
+Palabrasa <- names(Frecuenciaa)
+antofa<-cbind(antofa,Palabrasa)
+ggplot(antofa) +   # asociamos un data frame a ggplot
+  geom_bar(aes(x = reorder(Palabrasa, Frecuenciaa), y = Frecuenciaa), stat="identity") +   # creamos un grafico de barras como una capa
+  coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Top conceptos Antofagasta") + # título
+  xlab("Concepto") + ylab("Frecuencia (cantidad)") 
+```
+
+```{r}
+# 10 conceptos más mencionados en Metropolitana de Santiago
+data_stgo <- data_tf[data_tf$region =='Metropolitana de Santiago',]
+mencionadosstgo<-colSums(data_stgo[3:114])
+vectorstgo <- unlist(mencionadosstgo)
+Frecuencias <- sort(vectorstgo,decreasing = T)[1:10]
+stgo <- data.frame(Frecuencias)
+Palabrass <- names(Frecuencias)
+stgo<-cbind(stgo,Palabrass)
+ggplot(stgo) +   # asociamos un data frame a ggplot
+  geom_bar(aes(x = reorder(Palabrass, Frecuencias), y = Frecuencias), stat="identity") +   # creamos un grafico de barras como una capa
+  coord_flip() +  # transformamos el grafico invirtiendo los ejes de coordenadas (sólo visualmente)
+  ggtitle("Top conceptos Santiago") + # título
+  xlab("Concepto") + ylab("Frecuencia (cantidad)") 
+```
+
+6. De la pregunta anterior, ¿considera que es razonable usar el conteo de frecuencias para determinar las regiones que tuvieron mayor participación en el proceso? ¿Por qué? Sugiera y solamente comente una forma distinta de hacerlo.
+
+**Respuesta: No consideramos razonable usar el conteo de frecuencias, esto debido a que se relaciona mucho con la cantidad de habitantes y de comunas que hay dentro de cada región, por ejemplo en Santiago hay muchas más comunas, lo que no significa necesariamente que esta región tuvo mayor participación. Sería muy bueno poder tener algún dato que indique la calidad de la conversación, también algo que se podría hacer es de alguna manera "normalizar" la frecuencia, esto se podría hacer dividiendo las frecuencias por la cantidad de comunas o participantes dentro de una región, de esta manera el cuociente obtenido sería más significativo y no estaría influenciado por la cantidad de personas o de comunas.**

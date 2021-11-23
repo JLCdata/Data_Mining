@@ -1,0 +1,167 @@
+---
+title: "Laboratorio 4 - Reglas de Asociación en R"
+author: "Cuerpo docente: Hernán Sarmiento, Andrés Abeliuk, Alison Fernandez, Cinthia Sánchez, Johnny Godoy, Gabriel Ramos, Cristian Llull y Matías Rojas"
+date: "Noviembre 2021"
+output: 
+  html_document: 
+    theme: cosmo
+    toc: yes
+---
+
+# Declaración de compromiso ético
+
+Nosotros **José Luis Cádiz y Maximiliano Jorquera**, declaramos que realizamos de manera grupal los pasos de la presente actividad. También declaramos no incurrir en copia, ni compartir nuestras respuestas con otras personas ni con otros grupos. Por lo que, ratificamos que las respuestas son de nuestra propia confección y reflejan nuestro propio conocimiento.
+
+# Instrucciones
+
+1. Trabajen en equipos de dos personas. Salvo excepciones, no se corregirán las entregas con menos de dos integrantes.
+
+2. Modifique este archivo `.Rmd` agregando sus respuestas donde corresponda.
+
+3. Para cada pregunta, cuando corresponda, **incluya el código fuente que utilizó para llegar a su respuesta**.
+
+4. El formato de entrega es un archivo html. **Genere un archivo HTML usando RStudio** y súbalo a U-Cursos.
+   Basta con que uno de los integrantes haga la entrega. Si ambos hacen una entrega en U-Cursos, se revisará cualquiera de estas.
+
+
+# Laboratorio
+
+La primera parte de esta actividad son preguntas teóricas que avanzaron en las clases del curso de Minería de datos.
+
+Para la presente actividad usaremos un dataset extenso llamado `Groceries`. 
+
+```{r, eval=T}
+library("arules")
+library("arulesViz")
+library('arules')
+
+data(Groceries)
+inspect(head(Groceries))
+```
+
+## Parte 1: Dataset Groceries
+
+**1.1** Usando el dataset `Groceries`, indique cuáles son las reglas (no itemsets) que aparecen más de un 4% en el dataset. Muestre las top 5 ordenadas de mayor a menor por cantidad de ocurrencias. Adjunte código. 
+
+Nota: use `confidence=0.3`.
+
+```{r}
+# RESPUESTA
+rules <- apriori(Groceries, parameter=list(support=0.04, confidence=0.3))
+```
+
+```{r}
+# RESPUESTA
+rules.sorted <- sort(rules, by="count")
+rules.sorted.first5 <- head(rules.sorted, 5)
+inspect(rules.sorted.first5)
+```
+
+**1.2** Usando el dataset `Groceries`, muestre 10 reglas de asociación que podrían generar una mayor venta en el supermercado. Emplee *Apriori* con `confidence=0.3` y que la regla aparezca en al menos un 1% del dataset. Fundamente su respuesta en base a los resultados y adjunte código. 
+
+```{r}
+# RESPUESTA
+rules2 <- apriori(Groceries, parameter=list(support=0.01, confidence=0.3))
+top_subrules <- head(rules2, n = 10, by = "lift")
+inspect(top_subrules)
+```
+Seleccionamos el top 10 de reglas con mayor lift, ya que creemos que esta métirca nos ayuda a generar una mayor venta en el supermercado, esto debido a que esta métrica nos entrega el grado de dependencia estadística, lo que nos asegura que al filtar con un lift mayor a 1, si se compra un itemset (X), implica que la otra compra (Y) también va a aumentar.
+
+**1.3** El siguiente gráfico muestra las reglas obtenidas con Apriori con minSup=0.01 y minConf=0.3. Describa tres observaciones a partir del gráfico (por ejemplo: "la mayoría de las reglas tienen soporte menor a 0.02").
+
+![](https://users.dcc.uchile.cl/~mquezada/cursos/cc5206/scatter_groceries.png)
+
+
+Respuesta
+
+La mayoría de las reglas tienen confidence menor a 0.7.
+
+La mayoría de las reglas tienen lift menor a 7.
+
+Las únicas reglas que tienen un lift alto, tienen un support cercano a 0.
+
+
+## Parte 2: Conceptual
+
+**2.1** ¿Qué significa que la regla `{chocolate, shopping bags} => {cake bar}`, tenga un `confidence` de $1$? Explique. 
+
+Respuesta: El confidence mide qué tan frecuentemente los ítems en Y aparecen en transacciones que contienen X, esto quiere decir que cake bar aparece en todas las transacciones que contienen chocolate y shopping bags.
+
+**2.2** ¿Qué significa que la regla `{processed cheese, white bread} => {ham} ` tenga un lift de $18$? Explique. 
+
+Respuesta: Significa que processed cheese y white bread están asociados muy positivamente con ham y esto no se debe a una eventual superoridad de compra de ham, sino que efectivamente la asociación es válida (lo que no implica causalidad)
+
+**2.3** Si tuviéramos la regla `{yogurt} => {coffee}`, y encontráramos que tiene `confidence` $1$ ¿Podríamos decir que este es un patrón relevante sobre los datos?
+
+Respuesta: Depende, ya que habría que compararlo con otras métricas (puede que haya sido el único caso), como support, Laplace, Gini, etc. Además, para que sea relevante o de interés, tiene que contradecir las expectativas del usuario (Silberschatz & Tuzhilin) o ser accionable, es decir, que se pueda usar como razón para hacer algo (Silberschatz & Tuzhilin) y esa información no la tenemos, por lo que nos faltaría conocer más para poder decir si esto es relevante o no.
+
+
+**2.4** Explique el Algoritmo *Apriori* para encontrar/generar itemsets frecuentes.
+
+Respuesta: Primero se identifican los itemset con 1 item de frecuencia en la base de datos. Luego, se encuentran candidatos a k-itemsets frecuentes combinando pares de (k-1) itemsets frecuentes que tienen el último elemento distinto, para esto los itemsets tienen que estar ordenados lexicográficamente (mezcla). Luego, se verifica que los sub-itemsets del candidato sean frecuentes, si hay alguno no frecuente se descarta (poda). Finalmente, se cuenta el soporte del itemset candidato y se verifica si cumple el criterio minsup, utilizando un árbol hash para contar eficientemente (conteo de suporte). 
+
+**2.5** Explique cómo se encuentran/generan reglas de asociación con *Apriori* en base a los itemsets frecuentes. Para esto asuma que los valores de soporte ya fueron calculados en la fase previa (pregunta anterior) y se encuentran guardados en un árbol hash (hash tree).
+
+Respuesta: Primero se particiona el itemset Y en dos subconjuntos no vacios (X) e (Y − X) para formar la regla (X) → (Y − X). Con X → Y − X satisfaciendo la restricción de minconf. 
+
+Por ejemplo: Y = {a,b,c}, X = {a,b}, Y− X = {c} produce la regla {a,b} → {c}.
+
+Para el itemset Y = {a, b, c} se pueden generar 6 reglas, como el soporte de cada regla es igual al de X, todas estas reglas satisfacen minsup.
+
+
+## Parte 3 : Aplicación práctica de las Reglas de Asociación
+
+**3.1** Considere las siguientes transacciones:
+```
+{audífonos, smartphone}
+{audífonos, smartphone}
+...
+{audífonos, smartphone}
+{smartphone}
+{smartphone}
+...
+{smartphone}
+```
+Ambas transacciones aparecen un mismo número de veces, es decir, `{audífonos, smartphone}` aparece 3 veces, y `{smartphone}` también aparece 3 veces. De este dataset extraemos las siguientes reglas:
+
+1. `{audífonos} => {smartphone}`
+2. `{smartphone} => {audífonos}`
+
+Analice cuál de las 2 reglas es más útil para un negocio que quiere recomendar productos a sus clientes. ¿Qué puede decir sobre las medidas de interés de ambas reglas? Concluya viendo el `lift` de ambas reglas.
+
+Respuesta: Es más útil la regla número 1, ya que en todas las compras aparece smartphone, por lo que no es un buen elemento para hacer una regla, ya que está siempre presente, lo que nos "ensucia" el análisis.
+
+Cálculo de Lift:
+
+1. `{audífonos} => {smartphone}`
+
+```{r}
+# RESPUESTA
+
+#        smart no-smart
+#aud       3      0     3
+#no-aud    3      0     3
+#          6      0     6
+
+#Support = 0.5
+#Conf = 0.5
+#P(smart) = 1
+#Lift = 0.5/1 = 0.5
+```
+
+2. `{smartphone} => {audífonos}`
+
+```{r}
+# RESPUESTA
+#          aud no-aud
+#smart      3    3     6
+#no-smart   0    0     0
+#           3    3     6
+           
+#Support = 0.5
+#Conf = 0 
+#P(aud) = 0.5 
+#Lift = 0/0.5 = 0
+```
+
+Viendo las métricas calculadas, vemos que la compra de smartphone no se asocia con nada, lo que era de esperarse ya que está presente en todas las compras, por lo que inferir desde la compra de un smartphone no nos entrega reglas o grandes conclusiones.
